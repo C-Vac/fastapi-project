@@ -1,6 +1,8 @@
 from sqlalchemy.orm import Session
 
 from fastapi import FastAPI, HTTPException, Depends, APIRouter
+
+from ..oauth2 import get_current_user
 from ..schemas import Post, PostCreate
 from .. import models, utils
 from ..database import get_db
@@ -23,7 +25,9 @@ def get_latest_post(db: Session = Depends(get_db)):
 
 
 @router.get("/{id}", response_model=Post)
-def get_post(id: int, db: Session = Depends(get_db)):
+def get_post(
+    id: int, db: Session = Depends(get_db), user_id: int = Depends(get_current_user)
+):
     post = db.query(models.Post).filter(models.Post.id == id).first()
 
     if not post:
@@ -32,7 +36,12 @@ def get_post(id: int, db: Session = Depends(get_db)):
 
 
 @router.post("/", status_code=201, response_model=Post)
-def create_post(post: PostCreate, db: Session = Depends(get_db)):
+def create_post(
+    post: PostCreate,
+    db: Session = Depends(get_db),
+    user_id: int = Depends(get_current_user),
+):
+
     new_post = models.Post(**post.model_dump())
     db.add(new_post)
     db.commit()
@@ -42,7 +51,12 @@ def create_post(post: PostCreate, db: Session = Depends(get_db)):
 
 
 @router.put("/{id}", response_model=Post)
-def update_post(id: int, updated_post: PostCreate, db: Session = Depends(get_db)):
+def update_post(
+    id: int,
+    updated_post: PostCreate,
+    db: Session = Depends(get_db),
+    user_id: int = Depends(get_current_user),
+):
     post_query = db.query(models.Post).filter(models.Post.id == id)
     post = post_query.first()
 
@@ -56,7 +70,9 @@ def update_post(id: int, updated_post: PostCreate, db: Session = Depends(get_db)
 
 
 @router.delete("/{id}", status_code=204)
-def delete_post(id: int, db: Session = Depends(get_db)):
+def delete_post(
+    id: int, db: Session = Depends(get_db), user_id: int = Depends(get_current_user)
+):
     post = db.query(models.Post).filter(models.Post.id == id)
 
     if post.first() == None:
