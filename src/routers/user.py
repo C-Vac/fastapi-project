@@ -33,7 +33,7 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
 def get_user(
     id: int,
     db: Session = Depends(get_db),
-    user_id: int = Depends(get_current_user),
+    current_user=Depends(get_current_user),
 ):
     user = db.query(models.User).filter(models.User.id == id).first()
 

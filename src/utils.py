@@ -7,5 +7,5 @@ def hash(password: str) -> str:
     return pwd_context.hash(password)
 
 
-def verify(plaintext: str, hashed: str) -> bool:
+def verify(plaintext, hashed) -> bool:
     return pwd_context.verify(plaintext, hashed)

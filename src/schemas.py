@@ -15,6 +15,7 @@ class PostCreate(PostBase):
 class Post(PostBase):
     id: int
     created_at: datetime
+    owner_id: int | None = None
 
     class Config:
         from_attributes = True
@@ -45,4 +46,4 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    id: int | None = None
+    id: str | None = None

@@ -1,10 +1,10 @@
+from fastapi import FastAPI, HTTPException, Depends, APIRouter, Response
 from sqlalchemy.orm import Session
 
-from fastapi import FastAPI, HTTPException, Depends, APIRouter
 
 from ..oauth2 import get_current_user
 from ..schemas import Post, PostCreate
-from .. import models, utils
+from .. import models
 from ..database import get_db
 
 router = APIRouter(prefix="/posts", tags=["posts"])
@@ -26,7 +26,9 @@ def get_latest_post(db: Session = Depends(get_db)):
 
 @router.get("/{id}", response_model=Post)
 def get_post(
-    id: int, db: Session = Depends(get_db), user_id: int = Depends(get_current_user)
+    id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
 ):
     post = db.query(models.Post).filter(models.Post.id == id).first()
 
@@ -39,10 +41,13 @@ def get_post(
 def create_post(
     post: PostCreate,
     db: Session = Depends(get_db),
-    user_id: int = Depends(get_current_user),
+    current_user=Depends(get_current_user),
 ):
 
-    new_post = models.Post(**post.model_dump())
+    post_dict = post.model_dump()
+    post_dict["owner_id"] = current_user.id
+    new_post = models.Post(**post_dict)
+
     db.add(new_post)
     db.commit()
     db.refresh(new_post)
@@ -55,11 +60,12 @@ def update_post(
     id: int,
     updated_post: PostCreate,
     db: Session = Depends(get_db),
-    user_id: int = Depends(get_current_user),
+    current_user=Depends(get_current_user),
 ):
     post_query = db.query(models.Post).filter(models.Post.id == id)
     post = post_query.first()
 
+    print(current_user)
     if post == None:
         raise HTTPException(status_code=404, detail=f"post with id {id} does not exist")
 
@@ -71,12 +77,23 @@ def update_post(
 
 @router.delete("/{id}", status_code=204)
 def delete_post(
-    id: int, db: Session = Depends(get_db), user_id: int = Depends(get_current_user)
+    id: int,
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
 ):
-    post = db.query(models.Post).filter(models.Post.id == id)
 
-    if post.first() == None:
-        raise HTTPException(status_code=404)
-    post.delete(synchronize_session=False)
+    post_query = db.query(models.Post).filter(models.Post.id == id)
+    post = post_query.first()
+
+    if post == None:
+        raise HTTPException(status_code=404, detail="post does not exist")
+
+    if post.owner_id != current_user.id:
+        raise HTTPException(
+            status_code=403, detail="not authorized to perform this action"
+        )
+
+    post_query.delete(synchronize_session=False)
     db.commit()
-    return
+
+    return Response(status_code=204)
