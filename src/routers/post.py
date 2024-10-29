@@ -1,6 +1,6 @@
-from fastapi import FastAPI, HTTPException, Depends, APIRouter, Response
+from fastapi import HTTPException, Depends, APIRouter, Response
 from sqlalchemy.orm import Session
-
+from sqlalchemy import select, Result
 
 from ..oauth2 import get_current_user
 from ..schemas import Post, PostCreate
@@ -11,17 +11,29 @@ router = APIRouter(prefix="/posts", tags=["posts"])
 
 
 @router.get("/", response_model=list[Post])
-def get_posts(db: Session = Depends(get_db)):
+def get_posts(
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+):
     posts = db.query(models.Post).all()
 
     return posts
 
 
-@router.get("/latest")  # TODO need work
-def get_latest_post(db: Session = Depends(get_db)):
-    posts = db.query(models.Post).all()
-
-    return posts
+@router.get("/latest", response_model=list[Post])
+def get_latest_posts(
+    db: Session = Depends(get_db),
+    current_user=Depends(get_current_user),
+    limit: int = 10,
+):
+    posts = (
+        db.execute(select(models.Post).order_by(models.Post.created_at.desc()))
+        .scalars()
+        .all()
+    )
+    if not posts:
+        raise HTTPException(status_code=404, detail="No posts available")
+    return posts[:limit]
 
 
 @router.get("/{id}", response_model=Post)
@@ -44,9 +56,9 @@ def create_post(
     current_user=Depends(get_current_user),
 ):
 
-    post_dict = post.model_dump()
-    post_dict["owner_id"] = current_user.id
-    new_post = models.Post(**post_dict)
+    # post_dict = post.model_dump()
+    # post_dict["owner_id"] = current_user.id
+    new_post = models.Post(owner_id=current_user.id, **post.model_dump())
 
     db.add(new_post)
     db.commit()
