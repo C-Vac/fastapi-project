@@ -1,11 +1,5 @@
-from fastapi import FastAPI, Depends
-from sqlalchemy.orm import Session
-from .schemas import *
-from .database import engine, get_db
-from . import models
+from fastapi import FastAPI
 from .routers import post, user, auth
-
-models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 

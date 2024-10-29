@@ -12,7 +12,16 @@ def user_login(
     user_credentials: OAuth2PasswordRequestForm = Depends(),
     db: Session = Depends(database.get_db),
 ):
+    """
+    Authenticates a user.
 
+    Args:
+        user_credentials: The user's login credentials, provided in the request body.
+        db: The database session.
+
+    Returns:
+        A JSON response with an access token and the token type.
+    """
     user = (
         db.query(models.User)
         .filter(models.User.email == user_credentials.username)

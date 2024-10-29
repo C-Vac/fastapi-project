@@ -10,14 +10,25 @@ from ..database import get_db
 router = APIRouter(prefix="/posts", tags=["posts"])
 
 
-@router.get("/", response_model=list[Post])
-def get_posts(
+@router.get("/", response_model=dict[str, str | list[Post]])
+def get_posts_range(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
+    limit: int = 10,
+    skip: int = 0,
 ):
-    posts = db.query(models.Post).all()
-
-    return posts
+    posts = (
+        db.execute(
+            select(models.Post)
+            .order_by(models.Post.created_at.desc())
+            .limit(limit)
+            .offset(skip)
+        )
+        .scalars()
+        .all()
+    )
+    response_body = {"count": f"{len(posts)}", "posts": posts}
+    return response_body
 
 
 @router.get("/latest", response_model=list[Post])
@@ -27,17 +38,19 @@ def get_latest_posts(
     limit: int = 10,
 ):
     posts = (
-        db.execute(select(models.Post).order_by(models.Post.created_at.desc()))
+        db.execute(
+            select(models.Post).order_by(models.Post.created_at.desc()).limit(limit)
+        )
         .scalars()
         .all()
     )
     if not posts:
         raise HTTPException(status_code=404, detail="No posts available")
-    return posts[:limit]
+    return posts
 
 
 @router.get("/{id}", response_model=Post)
-def get_post(
+def get_post_by_id(
     id: int,
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),

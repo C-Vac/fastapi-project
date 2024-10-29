@@ -12,6 +12,16 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 @router.post("/", status_code=201, response_model=UserOut)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
+    """
+    Creates a new user.
+
+    Args:
+        user (UserCreate): The user to create.
+        db (Session): The database session.
+
+    Raises:
+        HTTPException: If a user with the given email address already exists.
+    """
     existing_user = (
         db.query(models.User).filter(models.User.email == user.email).first()
     )
@@ -35,6 +45,20 @@ def get_user(
     db: Session = Depends(get_db),
     current_user=Depends(get_current_user),
 ):
+    """
+    Retrieves a user by their id.
+
+    Args:
+        id (int): The id of the user to retrieve.
+        db (Session): The database session.
+        current_user (models.User): The current user.
+
+    Raises:
+        HTTPException: If the user does not exist.
+
+    Returns:
+        models.User: The retrieved user.
+    """
     user = db.query(models.User).filter(models.User.id == id).first()
 
     if not user:
