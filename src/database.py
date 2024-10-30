@@ -1,9 +1,10 @@
 from sqlalchemy import create_engine, inspect, text
 from sqlalchemy.orm import sessionmaker
 
-SQLALCHEMY_DATABASE_URL = (
-    "postgresql+psycopg://fastapi-app:password123@localhost:5432/fastapi"
-)
+from config import settings
+
+SQLALCHEMY_DATABASE_URL = f"postgresql+psycopg://settings.database_username:password123@localhost:5432/fastapi"
+
 
 engine = create_engine(SQLALCHEMY_DATABASE_URL, echo=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

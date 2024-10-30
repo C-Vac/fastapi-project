@@ -4,6 +4,7 @@ from .database import nuke_database, push_model_updates
 
 app = FastAPI()
 
+
 # update mode
 # nuke_database()
 # push_model_updates()
