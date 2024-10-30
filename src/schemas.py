@@ -1,8 +1,6 @@
 from datetime import datetime
-from unittest.mock import Base
 
-from pydantic import BaseModel, EmailStr, Field, conint
-from pydantic.config import ConfigDict
+from pydantic import BaseModel, EmailStr, Field
 from typing_extensions import Annotated
 
 
@@ -39,11 +37,17 @@ class UserProfileOut(BaseModel):
         from_attributes = True
 
 
+class Vote(BaseModel):
+    post_id: int
+    direction: Annotated[int, Field(strict=True, le=1)]
+
+
 class Post(PostBase):
     id: int
     created_at: datetime
     author_id: int | None = None
     author: UserOut
+    votes: int | None = None
 
     class Config:
         from_attributes = True
@@ -73,8 +77,3 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     id: str | None = None
-
-
-class Vote(BaseModel):
-    post_id: int
-    direction: Annotated[int, Field(strict=True, le=1)]

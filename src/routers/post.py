@@ -1,11 +1,13 @@
-from fastapi import HTTPException, Depends, APIRouter, Response
-from sqlalchemy.orm import Session
-from sqlalchemy import select
+from typing import Sequence
 
-from ..oauth2 import get_current_user
-from ..schemas import Post, PostCreate
+from fastapi import APIRouter, Depends, HTTPException, Response
+from sqlalchemy import Integer, Row, func, select
+from sqlalchemy.orm import Session
+
 from .. import models
 from ..database import get_db
+from ..oauth2 import get_current_user
+from ..schemas import Post, PostCreate
 
 router = APIRouter(prefix="/posts", tags=["posts"])
 
@@ -17,17 +19,33 @@ def get_posts_range(
     limit: int = 10,
     skip: int = 0,
 ):
-    posts = (
-        db.execute(
-            select(models.Post)
-            .order_by(models.Post.created_at.desc())
-            .limit(limit)
-            .offset(skip)
+
+    query = (
+        select(
+            models.Post, func.count(models.Vote.post_id).cast(Integer).label("votes")
         )
-        .scalars()
-        .all()
+        .join(models.Vote, models.Vote.post_id == models.Post.id, isouter=True)
+        .group_by(models.Post.id)
     )
-    response_body = {"count": f"{len(posts)}", "posts": posts}
+    print(query)
+
+    posts = db.execute(query.limit(limit).offset(skip)).all()
+
+    response_body = {
+        "count": f"{len(posts)}",
+        "posts": [
+            Post(
+                id=post[0].id,
+                title=post[0].title,
+                content=post[0].content,
+                created_at=post[0].created_at,
+                author=post[0].author,
+                author_id=post[0].author_id,
+                votes=post[1],
+            )
+            for post in posts
+        ],
+    }
     return response_body
 
 
