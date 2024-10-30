@@ -7,10 +7,10 @@ from ..database import get_db
 from ..oauth2 import get_current_user
 from ..schemas import Vote
 
-router = APIRouter(prefix="/vote", tags=["votes"])
+router = APIRouter(prefix="", tags=["Votes"])
 
 
-@router.post("/", status_code=201)
+@router.post("/vote", status_code=201)
 def vote(
     vote: Vote, db: Session = Depends(get_db), current_user=Depends(get_current_user)
 ):

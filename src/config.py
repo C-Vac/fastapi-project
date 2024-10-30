@@ -1,9 +1,5 @@
 from pydantic_settings import BaseSettings
 
-SQLALCHEMY_DATABASE_URL = (
-    "postgresql+psycopg://fastapi-app:password123@localhost:5432/fastapi"
-)
-
 
 class Settings(BaseSettings):
     database_hostname: str

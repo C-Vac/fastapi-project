@@ -1,7 +1,5 @@
-from typing import Sequence
-
 from fastapi import APIRouter, Depends, HTTPException, Response
-from sqlalchemy import Integer, Row, func, select
+from sqlalchemy import Integer, func, select
 from sqlalchemy.orm import Session
 
 from .. import models
@@ -18,6 +16,7 @@ def get_posts_range(
     current_user=Depends(get_current_user),
     limit: int = 10,
     skip: int = 0,
+    search: str = "",
 ):
 
     query = (
@@ -26,10 +25,14 @@ def get_posts_range(
         )
         .join(models.Vote, models.Vote.post_id == models.Post.id, isouter=True)
         .group_by(models.Post.id)
+        .filter(models.Post.title.contains(search))
     )
     print(query)
 
     posts = db.execute(query.limit(limit).offset(skip)).all()
+
+    if not posts:
+        raise HTTPException(status_code=404, detail="No posts available")
 
     response_body = {
         "count": f"{len(posts)}",
