@@ -6,7 +6,7 @@ from .routers import auth, post, user, vote
 
 app = FastAPI()
 
-origins = []  # CORS origins
+origins = [""]  # CORS origins
 
 app.add_middleware(
     CORSMiddleware,
@@ -18,7 +18,7 @@ app.add_middleware(
 
 # update mode
 # nuke_database()
-push_model_updates()
+# push_model_updates()
 
 app.include_router(post.router)
 app.include_router(user.router)
