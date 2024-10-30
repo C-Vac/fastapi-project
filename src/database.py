@@ -27,8 +27,7 @@ def nuke_database():
         for table_name in table_names:
             conn.execute(text(f"DROP TABLE IF EXISTS {table_name} CASCADE"))
 
-    push_model_updates()
-    print("Database nuked! All tables deleted and regenerated.")
+    print("Database nuked! No more data!!!")
 
 
 def push_model_updates():
