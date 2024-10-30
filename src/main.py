@@ -1,10 +1,20 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from .database import nuke_database, push_model_updates
 from .routers import auth, post, user, vote
 
 app = FastAPI()
 
+origins = []  # CORS origins
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # update mode
 # nuke_database()
