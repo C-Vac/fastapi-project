@@ -3,14 +3,14 @@ from sqlalchemy.orm import Session
 from fastapi import FastAPI, HTTPException, Depends, APIRouter
 
 from ..oauth2 import get_current_user
-from ..schemas import UserCreate, UserOut
+from ..schemas import UserCreate, UserOut, UserAndProfile
 from .. import models, utils
 from ..database import get_db
 
 router = APIRouter(prefix="/users", tags=["users"])
 
 
-@router.post("/", status_code=201, response_model=UserOut)
+@router.post("/", status_code=201, response_model=UserAndProfile)
 def create_user(user: UserCreate, db: Session = Depends(get_db)):
     """
     Creates a new user.
@@ -31,12 +31,15 @@ def create_user(user: UserCreate, db: Session = Depends(get_db)):
         )
 
     hashed_pw = utils.hash(user.password)
-    user.password = hashed_pw
-    new_user = models.User(**user.model_dump())
+    new_user = models.User(email=user.email, password=hashed_pw)
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
-    return new_user
+    new_profile = models.UserProfile(username=user.username, user_id=new_user.id)
+    db.add(new_profile)
+    db.commit()
+    db.refresh(new_profile)
+    return {"user": new_user, "profile": new_profile}
 
 
 @router.get("/{id}", response_model=UserOut)

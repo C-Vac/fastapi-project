@@ -13,10 +13,24 @@ class PostCreate(PostBase):
     pass
 
 
-class UserOut(BaseModel):
+class UserBase(BaseModel):
     id: int
     email: EmailStr
     created_at: datetime
+
+
+class UserOut(UserBase):
+    pass
+
+    class Config:
+        from_attributes = True
+
+
+class UserProfileOut(BaseModel):
+    id: int
+    user_id: int
+    username: str
+    bio: str | None = None
 
     class Config:
         from_attributes = True
@@ -25,8 +39,8 @@ class UserOut(BaseModel):
 class Post(PostBase):
     id: int
     created_at: datetime
-    owner_id: int | None = None
-    owner: UserOut
+    author_id: int | None = None
+    author: UserOut
 
     class Config:
         from_attributes = True
@@ -35,11 +49,18 @@ class Post(PostBase):
 class UserCreate(BaseModel):
     email: EmailStr
     password: str
+    username: str
+    bio: str | None = None
 
 
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
+
+class UserAndProfile(BaseModel):
+    user: UserOut
+    profile: UserProfileOut
 
 
 class Token(BaseModel):

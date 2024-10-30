@@ -1,6 +1,6 @@
 from fastapi import HTTPException, Depends, APIRouter, Response
 from sqlalchemy.orm import Session
-from sqlalchemy import select, Result
+from sqlalchemy import select
 
 from ..oauth2 import get_current_user
 from ..schemas import Post, PostCreate
@@ -69,9 +69,7 @@ def create_post(
     current_user=Depends(get_current_user),
 ):
 
-    # post_dict = post.model_dump()
-    # post_dict["owner_id"] = current_user.id
-    new_post = models.Post(owner_id=current_user.id, **post.model_dump())
+    new_post = models.Post(author_id=current_user.id, **post.model_dump())
 
     db.add(new_post)
     db.commit()
@@ -113,7 +111,7 @@ def delete_post(
     if post == None:
         raise HTTPException(status_code=404, detail="post does not exist")
 
-    if post.owner_id != current_user.id:
+    if post.author_id != current_user.id:
         raise HTTPException(
             status_code=403, detail="not authorized to perform this action"
         )
