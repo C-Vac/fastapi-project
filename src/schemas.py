@@ -1,6 +1,9 @@
-from pydantic import BaseModel, EmailStr
-from pydantic.config import ConfigDict
 from datetime import datetime
+from unittest.mock import Base
+
+from pydantic import BaseModel, EmailStr, Field, conint
+from pydantic.config import ConfigDict
+from typing_extensions import Annotated
 
 
 class PostBase(BaseModel):
@@ -70,3 +73,8 @@ class Token(BaseModel):
 
 class TokenData(BaseModel):
     id: str | None = None
+
+
+class Vote(BaseModel):
+    post_id: int
+    direction: Annotated[int, Field(strict=True, le=1)]

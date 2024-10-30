@@ -1,8 +1,8 @@
 from sqlalchemy import Boolean, Column, ForeignKey, Integer, String, Text
-from sqlalchemy.orm import relationship
-from sqlalchemy.sql.sqltypes import TIMESTAMP
-from sqlalchemy.sql.expression import text
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship
+from sqlalchemy.sql.expression import text
+from sqlalchemy.sql.sqltypes import TIMESTAMP
 
 Base = declarative_base()
 
@@ -68,3 +68,13 @@ class UserProfile(Base):
     )
     bio = Column(String(1000), nullable=True)
     user = relationship("User", back_populates="profile")
+
+
+class Vote(Base):
+    __tablename__ = "votes"
+    user_id = Column(
+        Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True
+    )
+    post_id = Column(
+        Integer, ForeignKey("posts.id", ondelete="CASCADE"), primary_key=True
+    )
